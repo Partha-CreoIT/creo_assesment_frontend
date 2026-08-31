@@ -43,6 +43,8 @@ interface ExamState {
   setCurrent: (idx: number) => void;
   updateAnswer: (questionId: number, patch: Partial<AnswerDraft>) => void;
   flushAll: () => Promise<void>;
+  flushPending: () => Promise<void>;
+  cancelPendingSaves: () => void;
   setViolationState: (count: number, max: number) => void;
   openOverlay: (kind: string) => void;
   closeOverlay: () => void;
@@ -144,6 +146,37 @@ export const useExamStore = create<ExamState>((set, get) => ({
           studentApi.saveAnswer(q.id, payloadFor(q.type, answers[q.id]))
         )
     );
+  },
+
+  // Save only the answers whose debounce timer hasn't fired yet.
+  // Used right before the final strike locks the session server-side.
+  flushPending: async () => {
+    const { paper } = get();
+    if (!paper) return;
+    const pendingIds = [...saveTimers.keys()];
+    for (const [, t] of saveTimers) clearTimeout(t);
+    saveTimers.clear();
+    await Promise.allSettled(
+      pendingIds.map(async (qid) => {
+        const q = paper.questions.find((x) => x.id === qid);
+        const draft = get().answers[qid];
+        if (!q || !draft) return;
+        set({ saveStates: { ...get().saveStates, [qid]: "saving" } });
+        try {
+          await studentApi.saveAnswer(qid, payloadFor(q.type, draft));
+          set({ saveStates: { ...get().saveStates, [qid]: "saved" } });
+        } catch {
+          set({ saveStates: { ...get().saveStates, [qid]: "error" } });
+        }
+      })
+    );
+  },
+
+  // Drop scheduled saves without sending them — once the server has
+  // finalized the session, any further write would just be rejected (409).
+  cancelPendingSaves: () => {
+    for (const [, t] of saveTimers) clearTimeout(t);
+    saveTimers.clear();
   },
 
   setViolationState: (count, max) =>

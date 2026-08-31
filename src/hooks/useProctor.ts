@@ -36,6 +36,17 @@ export function useProctor(enabled: boolean, onAutoSubmit: (reason: string) => v
       if (submittedRef.current) return;
       store.getState().openOverlay(kind);
       try {
+        const state = store.getState();
+        if (state.violationCount + 1 >= state.maxViolations) {
+          // This strike will auto-submit. Push any debounced answers to the
+          // server BEFORE the violation locks the session, so nothing typed
+          // in the last moment is lost. Time-capped so a dead network can't
+          // stall the strike report.
+          await Promise.race([
+            state.flushPending(),
+            new Promise((resolve) => setTimeout(resolve, 1500)),
+          ]);
+        }
         const res = await studentApi.violation(kind);
         store.getState().setViolationState(res.violationCount, res.maxViolations);
         if (res.autoSubmitted) finish("violations");

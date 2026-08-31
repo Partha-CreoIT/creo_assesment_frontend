@@ -32,8 +32,15 @@ export default function ExamRoom() {
   const finishExam = useCallback(
     async (reason: string, alreadyFinalized: boolean) => {
       try {
-        await flushAll();
-        if (!alreadyFinalized) await studentApi.submit();
+        if (alreadyFinalized) {
+          // The server already locked the session (strike limit or sweeper) —
+          // pending saves would only be rejected with 409 now. The proctor
+          // flushed them before reporting the final strike.
+          useExamStore.getState().cancelPendingSaves();
+        } else {
+          await flushAll();
+          await studentApi.submit();
+        }
       } catch {
         /* the server sweeper has us covered */
       }
