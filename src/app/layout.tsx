@@ -23,7 +23,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Creo Assess",
   description:
-    "Creo's proctored placement exams — English, Aptitude and Coding",
+    "Creo's proctored mock tests — English, Aptitude and Coding",
 };
 
 export default function RootLayout({

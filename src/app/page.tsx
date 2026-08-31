@@ -72,7 +72,7 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-5xl items-baseline justify-between px-6 py-4">
           <h1 className="font-display text-2xl italic">Creo Assess</h1>
           <span className="label-caps !text-paper/60">
-            Placement Assessment Cell
+            Mock Test Portal
           </span>
         </div>
       </header>

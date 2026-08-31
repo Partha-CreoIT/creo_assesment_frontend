@@ -109,7 +109,7 @@ export default function ExamsPage() {
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Campus Placement Test — March"
+              placeholder="e.g. Campus Mock Test — March"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">

@@ -1,6 +1,6 @@
 # Exam Taker — Frontend (`exam_taker_fr`)
 
-Next.js app for a proctored placement-exam platform. Students register (name, email, semester, optional phone), get a randomly assigned question-paper set (A–F), and take a fullscreen exam with three sections — English (written), Aptitude (MCQ), and Coding (Python / Java / C with a Monaco editor and a real test runner). Admins manage the question bank, compose sets, watch a live monitor, grade English answers, and export results.
+Next.js app for Creo Assess, a proctored mock-test platform. Students register (name, email, semester, optional phone), get a randomly assigned question-paper set (A–F), and take a fullscreen exam with three sections — English (written), Aptitude (MCQ), and Coding (Python / Java / C with a Monaco editor and a real test runner). Admins manage the question bank, compose sets, watch a live monitor, grade English answers, and export results.
 
 Backend lives in the sibling repo `exam_taker_bc` (Go) — start it first.
 
