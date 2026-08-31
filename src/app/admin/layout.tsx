@@ -48,7 +48,7 @@ export default function AdminLayout({
     <div className="flex min-h-screen">
       <aside className="fixed inset-y-0 left-0 flex w-56 flex-col bg-ink text-paper">
         <div className="border-b border-paper/15 px-5 py-5">
-          <p className="font-display text-xl italic">Exam Taker</p>
+          <p className="font-display text-xl italic">Creo Assess</p>
           <p className="label-caps mt-0.5 !text-paper/50">Examiner&apos;s Office</p>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-4">

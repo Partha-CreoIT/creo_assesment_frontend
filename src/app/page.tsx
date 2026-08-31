@@ -13,7 +13,7 @@ import { Button, Card, ErrorNote, Input, Label, Select, Spinner } from "@/compon
 const schema = z.object({
   name: z.string().trim().min(2, "Please enter your full name"),
   email: z.string().trim().email("Please enter a valid email"),
-  semester: z.coerce.number().min(1).max(8),
+  semester: z.number().min(1).max(8),
   phone: z
     .string()
     .trim()
@@ -70,7 +70,7 @@ export default function LandingPage() {
       {/* Masthead */}
       <header className="border-b border-ink bg-ink text-paper">
         <div className="mx-auto flex max-w-5xl items-baseline justify-between px-6 py-4">
-          <h1 className="font-display text-2xl italic">Exam Taker</h1>
+          <h1 className="font-display text-2xl italic">Creo Assess</h1>
           <span className="label-caps !text-paper/60">
             Placement Assessment Cell
           </span>
@@ -201,7 +201,10 @@ export default function LandingPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="semester">Engineering semester</Label>
-                      <Select id="semester" {...register("semester")}>
+                      <Select
+                        id="semester"
+                        {...register("semester", { valueAsNumber: true })}
+                      >
                         {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                           <option key={s} value={s}>
                             Semester {s}
@@ -249,7 +252,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 text-xs text-ink-soft">
-          <span>© {new Date().getFullYear()} Exam Taker</span>
+          <span>© {new Date().getFullYear()} Creo</span>
           <a href="/admin" className="hover:text-ink hover:underline">
             Administrator sign in →
           </a>

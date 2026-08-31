@@ -33,7 +33,7 @@ export default function AdminLoginPage() {
     <div className="dotgrid flex min-h-screen items-center justify-center p-6">
       <div className="rise w-full max-w-sm">
         <div className="mb-6 text-center">
-          <h1 className="font-display text-3xl italic">Exam Taker</h1>
+          <h1 className="font-display text-3xl italic">Creo Assess</h1>
           <p className="label-caps mt-1">Examiner&apos;s Office</p>
         </div>
         <Card className="p-6">
