@@ -19,6 +19,7 @@ import {
   Textarea,
 } from "@/components/ui";
 import SetBuilder from "@/components/admin/SetBuilder";
+import QuestionUpload from "@/components/admin/QuestionUpload";
 
 export default function ExamDetailPage({
   params,
@@ -240,6 +241,9 @@ export default function ExamDetailPage({
           This replaces the current contents of all six sets.
         </p>
       </Card>
+
+      {/* Import from Word */}
+      <QuestionUpload exam={exam} onImported={refresh} />
 
       {/* Sets */}
       <h2 className="label-caps mt-8 mb-3">Question paper sets</h2>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Trash2 } from "lucide-react";
+import { Download, Plus, Search, Trash2 } from "lucide-react";
 import { adminApi } from "@/lib/api";
 import type { Question } from "@/lib/types";
 import { cn, QUESTION_TYPE_LABEL } from "@/lib/utils";
@@ -51,11 +51,19 @@ export default function QuestionsPage() {
     <div className="max-w-5xl">
       <div className="flex items-center justify-between gap-4">
         <h1 className="font-display text-3xl font-semibold">Question Bank</h1>
-        <Link href="/admin/questions/new">
-          <Button variant="green">
-            <Plus className="h-4 w-4" /> New question
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => adminApi.downloadQuestionTemplate().catch(() => {})}
+          >
+            <Download className="h-4 w-4" /> Upload template
           </Button>
-        </Link>
+          <Link href="/admin/questions/new">
+            <Button variant="green">
+              <Plus className="h-4 w-4" /> New question
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">

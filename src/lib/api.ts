@@ -15,11 +15,18 @@ import type {
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
+export interface UploadBlockError {
+  question: number;
+  error: string;
+}
+
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  details?: UploadBlockError[];
+  constructor(status: number, message: string, details?: UploadBlockError[]) {
     super(message);
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -175,6 +182,51 @@ export const adminApi = {
     admin<{ deleted: boolean }>(`/api/v1/admin/questions/${id}`, {
       method: "DELETE",
     }),
+
+  // Bulk-import questions from a filled .docx template into one exam set.
+  uploadQuestions: async (examId: number, setLabel: string, file: File) => {
+    const fd = new FormData();
+    fd.append("set", setLabel);
+    fd.append("file", file);
+    let res: Response;
+    try {
+      res = await fetch(
+        `${API_BASE}/api/v1/admin/exams/${examId}/questions/upload`,
+        {
+          method: "POST",
+          // No Content-Type: the browser sets the multipart boundary itself.
+          headers: { Authorization: `Bearer ${tokens.admin.get()}` },
+          body: fd,
+        }
+      );
+    } catch {
+      throw new ApiError(0, "Cannot reach the exam server — check your connection.");
+    }
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new ApiError(
+        res.status,
+        body?.error ?? `Upload failed (${res.status})`,
+        body?.details as UploadBlockError[] | undefined
+      );
+    }
+    return body as { created: number; set: string; items: Question[] };
+  },
+
+  // Download the blank .docx template admins fill in before uploading.
+  downloadQuestionTemplate: async () => {
+    const res = await fetch(`${API_BASE}/api/v1/admin/questions/template`, {
+      headers: { Authorization: `Bearer ${tokens.admin.get()}` },
+    });
+    if (!res.ok) throw new ApiError(res.status, "template download failed");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "question-upload-template.docx";
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 
   exams: () => admin<{ items: Exam[] }>("/api/v1/admin/exams"),
   exam: (id: number) => admin<Exam>(`/api/v1/admin/exams/${id}`),
