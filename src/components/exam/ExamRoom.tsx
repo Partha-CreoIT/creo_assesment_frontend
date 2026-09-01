@@ -139,7 +139,7 @@ export default function ExamRoom() {
           </span>
 
           <Button variant="primary" onClick={() => setSubmitOpen(true)}>
-            <Send className="h-4 w-4" /> Submit
+            <Send className="h-4 w-4" /> Complete Test
           </Button>
         </div>
       </header>
@@ -152,30 +152,30 @@ export default function ExamRoom() {
           {current.type === "english" && <EnglishQuestion question={current} />}
           {current.type === "aptitude" && <McqQuestion question={current} />}
           {current.type === "coding" && <CodingQuestion question={current} />}
+
+          {/* ── Nav (directly below the options) ── */}
+          <div className="flex items-center justify-between gap-4 border-t border-line px-4 py-3">
+            <Button
+              variant="outline"
+              disabled={currentIdx === 0}
+              onClick={() => setCurrent(currentIdx - 1)}
+            >
+              ← Previous
+            </Button>
+            <span className="font-mono text-xs text-ink-soft">
+              Question {currentIdx + 1} of {questions.length} · {answeredCount}{" "}
+              answered
+            </span>
+            <Button
+              variant="outline"
+              disabled={currentIdx === questions.length - 1}
+              onClick={() => setCurrent(currentIdx + 1)}
+            >
+              Next →
+            </Button>
+          </div>
         </main>
       </div>
-
-      {/* ── Footer nav ── */}
-      <footer className="flex h-12 shrink-0 items-center justify-between border-t border-line bg-paper px-4">
-        <Button
-          variant="outline"
-          disabled={currentIdx === 0}
-          onClick={() => setCurrent(currentIdx - 1)}
-        >
-          ← Previous
-        </Button>
-        <span className="font-mono text-xs text-ink-soft">
-          Question {currentIdx + 1} of {questions.length} · {answeredCount}{" "}
-          answered
-        </span>
-        <Button
-          variant="outline"
-          disabled={currentIdx === questions.length - 1}
-          onClick={() => setCurrent(currentIdx + 1)}
-        >
-          Next →
-        </Button>
-      </footer>
 
       <ViolationOverlay />
 
