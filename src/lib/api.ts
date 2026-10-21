@@ -23,6 +23,8 @@ export interface UploadBlockError {
 export class ApiError extends Error {
   status: number;
   details?: UploadBlockError[];
+  /** Seconds from the Retry-After header, set on 429 responses. */
+  retryAfter?: number;
   constructor(status: number, message: string, details?: UploadBlockError[]) {
     super(message);
     this.status = status;
@@ -78,7 +80,12 @@ async function request<T>(
     } catch {
       /* non-JSON error body */
     }
-    throw new ApiError(res.status, message);
+    const err = new ApiError(res.status, message);
+    const retryAfter = Number(res.headers.get("Retry-After"));
+    if (res.status === 429 && Number.isFinite(retryAfter)) {
+      err.retryAfter = retryAfter;
+    }
+    throw err;
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

@@ -79,9 +79,17 @@ export default function CodingQuestion({
       });
       setRunResult(res);
     } catch (e) {
-      setRunError(
-        e instanceof ApiError ? e.message : "Run failed — try again."
-      );
+      if (e instanceof ApiError && e.status === 429) {
+        // Per-session rate limit or the server-wide run queue is full.
+        const wait = Math.max(1, Math.ceil(e.retryAfter ?? 2));
+        setRunError(
+          `Server is busy running code — try again in ${wait} second${wait === 1 ? "" : "s"}.`
+        );
+      } else {
+        setRunError(
+          e instanceof ApiError ? e.message : "Run failed — try again."
+        );
+      }
     } finally {
       setRunning(false);
     }
