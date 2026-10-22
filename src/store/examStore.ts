@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { studentApi } from "@/lib/api";
+import { ApiError, studentApi } from "@/lib/api";
 import type { PaperQuestion, PaperResponse, QuestionType } from "@/lib/types";
 
 export interface AnswerDraft {
@@ -12,7 +12,17 @@ export interface AnswerDraft {
 export type SaveState = "idle" | "pending" | "saving" | "saved" | "error";
 
 const AUTOSAVE_DELAY = 800;
+const RETRY_DELAYS = [2000, 4000, 8000, 15000];
+// Holds both debounce and retry timers, so a new edit or a flush cancels a
+// pending retry along with any pending debounce.
 const saveTimers = new Map<number, ReturnType<typeof setTimeout>>();
+
+// Dropped connections (status 0), rate limits and server hiccups are worth
+// retrying; anything else (e.g. 409 once the session is finalized) is final.
+function isRetryable(err: unknown): boolean {
+  if (!(err instanceof ApiError)) return true;
+  return err.status === 0 || err.status === 429 || err.status >= 500;
+}
 
 function emptyDraft(): AnswerDraft {
   return { answerText: "", selectedIndex: null, code: "", language: "" };
@@ -56,6 +66,36 @@ function payloadFor(type: QuestionType, d: AnswerDraft) {
   if (type === "english") return { answerText: d.answerText };
   if (type === "aptitude") return { selectedIndex: d.selectedIndex };
   return { code: d.code, language: d.language };
+}
+
+// Sends the latest draft. On a retryable failure it tries again with backoff
+// until it lands, unless the student edits again first.
+async function saveDraft(questionId: number, attempt: number) {
+  saveTimers.delete(questionId);
+  const { paper, answers } = useExamStore.getState();
+  const q = paper?.questions.find((x) => x.id === questionId);
+  const draft = answers[questionId];
+  if (!q || !draft) return;
+  const setSaveState = (state: SaveState) =>
+    useExamStore.setState((s) => ({
+      saveStates: { ...s.saveStates, [questionId]: state },
+    }));
+  setSaveState("saving");
+  try {
+    await studentApi.saveAnswer(questionId, payloadFor(q.type, draft));
+    setSaveState("saved");
+  } catch (err) {
+    setSaveState("error");
+    if (!isRetryable(err) || saveTimers.has(questionId)) return;
+    const delay =
+      err instanceof ApiError && err.retryAfter
+        ? err.retryAfter * 1000
+        : RETRY_DELAYS[Math.min(attempt, RETRY_DELAYS.length - 1)];
+    saveTimers.set(
+      questionId,
+      setTimeout(() => saveDraft(questionId, attempt + 1), delay)
+    );
+  }
 }
 
 export const useExamStore = create<ExamState>((set, get) => ({
@@ -120,17 +160,7 @@ export const useExamStore = create<ExamState>((set, get) => ({
     if (existing) clearTimeout(existing);
     saveTimers.set(
       questionId,
-      setTimeout(async () => {
-        saveTimers.delete(questionId);
-        const draft = get().answers[questionId];
-        set({ saveStates: { ...get().saveStates, [questionId]: "saving" } });
-        try {
-          await studentApi.saveAnswer(questionId, payloadFor(q.type, draft));
-          set({ saveStates: { ...get().saveStates, [questionId]: "saved" } });
-        } catch {
-          set({ saveStates: { ...get().saveStates, [questionId]: "error" } });
-        }
-      }, AUTOSAVE_DELAY)
+      setTimeout(() => saveDraft(questionId, 0), AUTOSAVE_DELAY)
     );
   },
 
